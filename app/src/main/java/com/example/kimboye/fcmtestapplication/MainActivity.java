@@ -38,48 +38,84 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG="MainActivity";
+
+    RequestQueue queue;
 
     TextView text;
     EditText editText;
     Button button;
 
     @Override
+    protected void onStop() {
+        super.onStop();
+
+        //cancel request
+        if(queue != null){
+            queue.cancelAll(TAG);
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final RequestQueue queue = Volley.newRequestQueue(this);  // this = context
+        queue=Volley.newRequestQueue(this);
 
-        text = findViewById(R.id.text);
-        editText = findViewById(R.id.editText);
-        button = findViewById(R.id.button);
+        text=findViewById(R.id.text);
+        editText=findViewById(R.id.editText);
+        button=findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
 
-                final String url = "http://172.30.1.60:3000/send/boye/" + editText.getText().toString();
+                final String url="http://172.30.1.60:3000/send/boye/" + editText.getText().toString();
 
-                // prepare the Request
-                JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, (String) null,
-                        new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                // display response
-                                Log.d("Response", response.toString());
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("Error.Response", error.toString());
-                            }
-                        }
-                );
 
-                // add it to the RequestQueue
-                queue.add(getRequest);
+                // initialize Request
+                StringRequest request =new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // response
+                        Log.d("Response", response);
+
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // error
+                        Log.d("Error.Response", error.toString());
+                    }
+                });
+
+                // TAG를 붙이는 이유는 onStop()에서 cancel 작업 시 cancel할 수 있도록 하기 위함.
+                request.setTag(TAG);
+
+                // add a request to the queue
+                queue.add(request);
+
+
+//                // prepare the Request
+//                JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, (String) null,
+//                        new Response.Listener<JSONObject>() {
+//                            @Override
+//                            public void onResponse(JSONObject response) {
+//                                // display response
+//                                Log.d("Response", response.toString());
+//                            }
+//                        },
+//                        new Response.ErrorListener() {
+//                            @Override
+//                            public void onErrorResponse(VolleyError error) {
+//                                Log.d("Error.Response", error.toString());
+//                            }
+//                        }
+//                );
+//
+//                // add it to the RequestQueue
+//                queue.add(getRequest);
 
 
                 //POST로 보내기
@@ -117,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        String refreshedToken = FirebaseInstanceId.getInstance().getToken();
+        String refreshedToken=FirebaseInstanceId.getInstance().getToken();
         Log.d(TAG, "Refreshed token: " + refreshedToken);
 
 
@@ -125,10 +161,12 @@ public class MainActivity extends AppCompatActivity {
         // data Intent에 담겨있음
         if (getIntent().getExtras() != null) {
 
-            String message = getIntent().getExtras().getString("msg");
+            String message=getIntent().getExtras().getString("msg");
             text.append(message);
 
         }
+
+
 
 
     }
